@@ -1,0 +1,62 @@
+{
+  "name": "extship",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Publish a browser extension to the Chrome Web Store from CI, with a short-lived access token.",
+  "license": "MIT",
+  "homepage": "https://github.com/fishballapp/extship",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fishballapp/extship.git",
+    "directory": "packages/extship"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "bin": {
+    "extship": "./src/bin.ts"
+  },
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public",
+    "main": "./dist/index.mjs",
+    "types": "./dist/index.d.mts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      }
+    },
+    "bin": {
+      "extship": "./dist/bin.mjs"
+    }
+  },
+  "scripts": {
+    "build": "tsdown src/index.ts src/bin.ts --format esm --dts",
+    "prepack": "pnpm build",
+    "test": "vitest run",
+    "check:effect": "effect-tsgo diagnostics --project tsconfig.json --format text"
+  },
+  "dependencies": {
+    "fflate": "catalog:"
+  },
+  "peerDependencies": {
+    "effect": "^4.0.0"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "catalog:",
+    "@effect/vitest": "catalog:",
+    "@types/node": "catalog:",
+    "effect": "catalog:",
+    "tsdown": "catalog:",
+    "vitest": "catalog:"
+  }
+}
