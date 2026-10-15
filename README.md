@@ -30,6 +30,12 @@ npx extship chrome status --publisher-id <id> --item-id <id>
 
 `--dry-run` stops after reading the status, which proves the token and the IDs.
 
+**The item has to exist first.** The store's API only updates an item: every call takes its ID, and
+none creates one. Upload the first version on the
+[developer dashboard](https://chrome.google.com/webstore/devconsole) (New item), fill in its store
+listing and privacy tabs, which only the dashboard edits, and submit it there. extship publishes
+every version after that; the item ID is on the item's dashboard page.
+
 ## The CLI contract
 
 - **The token comes from `CHROME_WEB_STORE_ACCESS_TOKEN` only.** There is no flag (another process
@@ -64,7 +70,11 @@ and is safe to rerun. Right after creating a project, Google can deny its owner
 scripts/setup-gcp.sh <project-id> <owner/repo> .github/workflows/publish.yml
 ```
 
-The third argument is the one workflow that may mint a token. It must run on `main`.
+The third argument is the one workflow that may mint a token. It must run on `main`. The script
+admits one repository: rerunning it with another replaces the first in the provider's condition.
+To publish from a second repository, add a clause for it to the condition (`||`) and a
+`roles/iam.workloadIdentityUser` binding for its repository ID, as the last two commands below do
+for the first.
 
 Step by step, for reference (the script fills in the values):
 
