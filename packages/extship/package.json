@@ -1,6 +1,6 @@
 {
   "name": "extship",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "description": "Publish a browser extension to the Chrome Web Store from CI, with a short-lived access token.",
   "license": "MIT",

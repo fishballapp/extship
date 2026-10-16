@@ -5,6 +5,7 @@ import * as Effect from 'effect/Effect';
 import * as HttpClient from 'effect/http/HttpClient';
 import * as HttpClientRequest from 'effect/http/HttpClientRequest';
 import * as Layer from 'effect/Layer';
+import * as Option from 'effect/Option';
 import * as Schema from 'effect/Schema';
 
 /** The one place the access token is read from; never a flag, since argv is visible to other processes. */
@@ -114,6 +115,25 @@ export class UnexpectedResponseError extends Schema.TaggedError<UnexpectedRespon
 ) {}
 
 export type StoreError = StoreResponseError | StoreUnreachableError | UnexpectedResponseError;
+
+/** A Google API error body, as far as its `ErrorInfo` reasons. */
+const RefusalSchema = Schema.Struct({
+  error: Schema.Struct({
+    details: Schema.optionalKey(
+      Schema.Array(Schema.Struct({ reason: Schema.optionalKey(Schema.String) })),
+    ),
+  }),
+});
+
+/** The `ErrorInfo` reasons in the store's refusal (`NOT_UPDATEABLE`, …); none when the body has none. */
+export const refusalReasons = ({ body }: StoreResponseError): ReadonlyArray<string> =>
+  Schema.decodeOption(Schema.fromJsonString(RefusalSchema))(body).pipe(
+    Option.match({
+      onNone: () => [],
+      onSome: ({ error }) =>
+        (error.details ?? []).flatMap(({ reason }) => (reason === undefined ? [] : [reason])),
+    }),
+  );
 
 /** The Chrome Web Store API v2, for one access token. */
 export class ChromeWebStore extends Context.Service<

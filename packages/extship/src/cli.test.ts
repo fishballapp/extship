@@ -322,6 +322,36 @@ layer(NodeServices.layer)(it => {
       }),
     );
 
+    it.effect(
+      'fails with InReviewError when the store refuses an upload to an item in review',
+      () =>
+        Effect.gen(function* () {
+          // A new item's first version, submitted on the dashboard: its status shows no revision.
+          const refusal = {
+            error: {
+              code: 400,
+              message: 'You may not edit or publish an item that is in review.',
+              status: 'FAILED_PRECONDITION',
+              details: [
+                {
+                  '@type': 'type.googleapis.com/google.rpc.ErrorInfo',
+                  reason: 'NOT_UPDATEABLE',
+                  domain: 'chromewebstore.googleapis.com',
+                },
+              ],
+            },
+          };
+          const { exit, calls, stderr } = yield* runCli(publishArgs(yield* zipOf('0.1.0')), call =>
+            route(call) === 'GET :fetchStatus'
+              ? { json: itemStatus({}) }
+              : { status: 400, json: refusal },
+          );
+          expect(Exit.isFailure(exit)).toBe(true);
+          expect(calls.map(route)).toEqual(['GET :fetchStatus', 'POST upload']);
+          expect(failure(stderr)).toMatchObject({ code: 'InReviewError' });
+        }),
+    );
+
     it.effect('fails with the store’s response body when publishing is refused', () =>
       Effect.gen(function* () {
         const refusal = {

@@ -10,6 +10,7 @@ import {
   type ItemState,
   type ItemStatus,
   type PublishType,
+  refusalReasons,
 } from './store.ts';
 
 const POLL_INTERVAL = Duration.seconds(5);
@@ -23,6 +24,14 @@ export class StaleVersionError extends Schema.TaggedError<StaleVersionError>()(
   'StaleVersionError',
   { message: Schema.String },
 ) {}
+
+/**
+ * The store refused the upload because the item is in review, under a submission its status
+ * doesn't report: a new item's first version, submitted on the dashboard. Nothing changed.
+ */
+export class InReviewError extends Schema.TaggedError<InReviewError>()('InReviewError', {
+  message: Schema.String,
+}) {}
 
 /** The store finished processing the upload without accepting it, or never finished. */
 export class UploadFailedError extends Schema.TaggedError<UploadFailedError>()(
@@ -174,7 +183,17 @@ export const publish = Effect.fn('extship.publish')(function* ({
   }
 
   yield* Console.error(`Uploading ${zipVersion}`);
-  const upload = yield* store.upload(item, zip);
+  const upload = yield* store.upload(item, zip).pipe(
+    Effect.catchTag('StoreResponseError', error =>
+      Effect.fail(
+        refusalReasons(error).includes('NOT_UPDATEABLE')
+          ? new InReviewError({
+              message: `${zipVersion} was not uploaded: the item is in review, which its status doesn't show (a new item's first version, submitted on the dashboard). Rerun once the review ends.`,
+            })
+          : error,
+      ),
+    ),
+  );
   const uploadState =
     upload.uploadState === 'IN_PROGRESS'
       ? (yield* awaitProcessing(item)).lastAsyncUploadState

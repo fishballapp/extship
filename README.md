@@ -24,7 +24,9 @@ npx extship chrome status --publisher-id <id> --item-id <id>
 2. Cancels an open submission (pending review or staged) of an older version, since the store
    takes no upload while one is open.
 3. Uploads the zip. If the store is still processing it, polls the status every 5 seconds, for up
-   to 10 minutes; a failed or unfinished upload fails the command.
+   to 10 minutes; a failed or unfinished upload fails the command. A new item's first version,
+   submitted on the dashboard and still in review, doesn't show in the status, and the store refuses
+   the upload: that fails with `InReviewError`, having changed nothing, so rerun after the review.
 4. Submits it for review: `--publish-type default` goes live once approved, `staged` waits for you
    to publish it from the dashboard (within 30 days of approval). Prints the store's warnings.
 
@@ -52,8 +54,8 @@ every version after that; the item ID is on the item's dashboard page.
 
   `code` is `StoreResponseError` (the store answered outside 2xx; `body` is its answer),
   `StoreUnreachableError` (no answer, or a request timed out; a write may have landed),
-  `UnexpectedResponseError`, `UploadFailedError`, `InvalidPackageError` (no readable manifest
-  version in the zip), `MissingTokenError` or `UsageError`.
+  `UnexpectedResponseError`, `UploadFailedError`, `InReviewError`, `InvalidPackageError` (no
+  readable manifest version in the zip), `MissingTokenError` or `UsageError`.
 - Every request has a timeout: 30 seconds, 3 minutes for the upload.
 
 ## One-time Google Cloud setup
