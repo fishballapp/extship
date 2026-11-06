@@ -1,6 +1,6 @@
 {
   "name": "extship",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "description": "Publish a browser extension to the Chrome Web Store from CI, with a short-lived access token.",
   "license": "MIT",
@@ -40,7 +40,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown src/index.ts src/bin.ts --format esm --dts",
+    "build": "tsdown",
     "prepack": "pnpm build",
     "test": "vitest run",
     "check:effect": "effect-tsgo diagnostics --project tsconfig.json --format text"
